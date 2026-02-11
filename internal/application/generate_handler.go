@@ -5,18 +5,18 @@ import (
 	"llm-agent-go/internal/domain"
 )
 
-type QueryHandler struct {
+type GenerateHandler struct {
 	llmClient domain.LLMClient
 }
 
-func NewQueryHandler(
+func NewGenerateHandler(
 	llmClient domain.LLMClient,
-) QueryHandler {
-	return QueryHandler{
+) GenerateHandler {
+	return GenerateHandler{
 		llmClient: llmClient,
 	}
 }
 
-func (h QueryHandler) Handle(ctx context.Context, prompt string) (string, error) {
+func (h GenerateHandler) Handle(ctx context.Context, prompt string) (string, error) {
 	return h.llmClient.Generate(ctx, prompt)
 }

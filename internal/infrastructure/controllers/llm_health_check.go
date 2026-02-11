@@ -19,6 +19,11 @@ func NewLlmHealthCheckController(
 }
 
 func (c LlmHealthCheckController) Execute(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	err := c.handler.Handle(r.Context())
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)

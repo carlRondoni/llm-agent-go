@@ -5,7 +5,7 @@ import "llm-agent-go/internal/infrastructure/controllers"
 type Controllers struct {
 	HealthCheckController    controllers.HealthCheckController
 	LlmHealthCheckController controllers.LlmHealthCheckController
-	QueryController          controllers.QueryController
+	GenerateController       controllers.GenerateController
 	StreamController         controllers.StreamController
 }
 
@@ -13,7 +13,7 @@ func NewControllers(handlers Handlers) Controllers {
 	return Controllers{
 		HealthCheckController:    controllers.NewHealthCheckController(),
 		LlmHealthCheckController: controllers.NewLlmHealthCheckController(handlers.LLMHealthHandler),
-		QueryController:          controllers.NewQueryController(handlers.QueryHandler),
+		GenerateController:       controllers.NewGenerateController(handlers.GenerateHandler),
 		StreamController:         controllers.NewStreamController(handlers.StreamHandler),
 	}
 }

@@ -1,5 +1,4 @@
-# -------- BUILD STAGE --------
-FROM golang:1.25-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 WORKDIR /app
 
@@ -17,7 +16,6 @@ ARG TARGETARCH
 RUN CGO_ENABLED=0 \
     go build -o app ./cmd/api/main.go
 
-# -------- RUNTIME STAGE --------
 FROM alpine:3.23
 
 WORKDIR /app

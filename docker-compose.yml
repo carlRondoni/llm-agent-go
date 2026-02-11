@@ -10,16 +10,16 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       LOG_LEVEL: info
-      LLM_BASE_URL: http://llm:11434
+      OLLAMA_URL: http://ollama:11434
     depends_on:
-      - llm
+      - ollama
       - tempo
     networks:
       - observability
 
-  llm:
+  ollama:
     image: ollama/ollama:latest
-    container_name: llm
+    container_name: ollama
     ports:
       - "11434:11434"
     volumes:
@@ -70,7 +70,6 @@ services:
 volumes:
   grafana-data:
   ollama-data:
-
 
 networks:
   observability:
