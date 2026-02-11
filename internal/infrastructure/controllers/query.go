@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"llm-agent-go/internal/application"
 	"net/http"
 )
@@ -18,7 +19,20 @@ func NewQueryController(
 }
 
 func (c QueryController) Execute(w http.ResponseWriter, r *http.Request) {
-	// { response: "" }
+	prompt := r.URL.Query().Get("q")
+
+	resp, err := c.handler.Handle(r.Context(), prompt)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": err.Error(),
+		})
+
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"response": resp,
+	})
 }

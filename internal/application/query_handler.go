@@ -17,7 +17,6 @@ func NewQueryHandler(
 	}
 }
 
-func (h QueryHandler) Handle(ctx context.Context) error {
-	// debe responder el resultado del prompt
-	return nil
+func (h QueryHandler) Handle(ctx context.Context, prompt string) (string, error) {
+	return h.llmClient.Generate(ctx, prompt)
 }

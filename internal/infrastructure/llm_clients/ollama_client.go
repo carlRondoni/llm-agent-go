@@ -51,28 +51,47 @@ func (c OllamaClient) Generate(ctx context.Context, prompt string) (string, erro
 		return "", err
 	}
 
-	reqBody := map[string]string{
-		"model":  c.model,
-		"prompt": prompt,
-	}
+	result, err := c.breaker.Execute(func() (any, error) {
+		reqBody := map[string]string{
+			"model":  c.model,
+			"prompt": prompt,
+		}
 
-	b, _ := json.Marshal(reqBody)
+		b, _ := json.Marshal(reqBody)
 
-	req, _ := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/generate", bytes.NewBuffer(b))
-	req.Header.Set("Content-Type", "application/json")
+		req, _ := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/generate", bytes.NewBuffer(b))
+		req.Header.Set("Content-Type", "application/json")
 
-	resp, err := c.http.Do(req)
+		resp, err := c.http.Do(req)
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode >= 400 {
+			return "", fmt.Errorf("llm generate failed, status: %d", resp.StatusCode)
+		}
+
+		var out struct {
+			Response string `json:"response"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+			return nil, err
+		}
+
+		return out.Response, nil
+	})
+
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
 
-	var out struct {
-		Response string `json:"response"`
+	response, ok := result.(string)
+	if !ok {
+		return "", fmt.Errorf("unexpected response type: %T", result)
 	}
-	json.NewDecoder(resp.Body).Decode(&out)
 
-	return out.Response, nil
+	return response, nil
 }
 
 func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string, error) {
@@ -80,49 +99,59 @@ func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string,
 		return nil, err
 	}
 
-	body := map[string]any{
-		"model":  c.model,
-		"prompt": prompt,
-		"stream": true,
-	}
-
-	b, _ := json.Marshal(body)
-
-	req, _ := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/generate", bytes.NewReader(b))
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := c.http.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
 	out := make(chan string)
 
-	go func() {
-		defer resp.Body.Close()
-		defer close(out)
-
-		scanner := bufio.NewScanner(resp.Body)
-
-		for scanner.Scan() {
-			var chunk struct {
-				Response string `json:"response"`
-				Done     bool   `json:"done"`
-			}
-
-			if err := json.Unmarshal(scanner.Bytes(), &chunk); err != nil {
-				continue
-			}
-
-			if chunk.Response != "" {
-				out <- chunk.Response
-			}
-
-			if chunk.Done {
-				return
-			}
+	_, err := c.breaker.Execute(func() (any, error) {
+		body := map[string]any{
+			"model":  c.model,
+			"prompt": prompt,
+			"stream": true,
 		}
-	}()
+
+		b, _ := json.Marshal(body)
+
+		req, _ := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/generate", bytes.NewReader(b))
+		req.Header.Set("Content-Type", "application/json")
+
+		resp, err := c.http.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		out := make(chan string)
+
+		go func() {
+			defer resp.Body.Close()
+			defer close(out)
+
+			scanner := bufio.NewScanner(resp.Body)
+
+			for scanner.Scan() {
+				var chunk struct {
+					Response string `json:"response"`
+					Done     bool   `json:"done"`
+				}
+
+				if err := json.Unmarshal(scanner.Bytes(), &chunk); err != nil {
+					continue
+				}
+
+				if chunk.Response != "" {
+					out <- chunk.Response
+				}
+
+				if chunk.Done {
+					return
+				}
+			}
+		}()
+
+		return nil, nil
+	})
+	if err != nil {
+		close(out)
+		return nil, err
+	}
 
 	return out, nil
 }
