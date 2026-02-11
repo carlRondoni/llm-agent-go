@@ -18,5 +18,6 @@ func NewQueryHandler(
 }
 
 func (h QueryHandler) Handle(ctx context.Context) error {
+	// debe responder el resultado del prompt
 	return nil
 }

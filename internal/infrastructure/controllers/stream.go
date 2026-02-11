@@ -18,5 +18,27 @@ func NewStreamController(
 }
 
 func (c StreamController) Execute(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+ctx := r.Context()
+
+    flusher, ok := w.(http.Flusher)
+    if !ok {
+        http.Error(w, "stream unsupported", 500)
+        return
+    }
+
+    w.Header().Set("Content-Type", "text/plain")
+    w.Header().Set("Transfer-Encoding", "chunked")
+
+    prompt := r.URL.Query().Get("q")
+
+    stream, err := c.handler.Handle(ctx, prompt)
+    if err != nil {
+        http.Error(w, err.Error(), 500)
+        return
+    }
+
+    for token := range stream {
+        _, _ = w.Write([]byte(token))
+        flusher.Flush()
+    }
 }

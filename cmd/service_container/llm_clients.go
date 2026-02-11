@@ -17,6 +17,6 @@ func NewLLMClients() LLMClients {
 	}
 
 	return LLMClients{
-		OllamaClient: llm_clients.NewOllamaClient(url),
+		OllamaClient: llm_clients.NewOllamaClient(url, "llama3"),
 	}
 }

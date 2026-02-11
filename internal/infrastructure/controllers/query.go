@@ -18,5 +18,7 @@ func NewQueryController(
 }
 
 func (c QueryController) Execute(w http.ResponseWriter, r *http.Request) {
+	// { response: "" }
+
 	w.WriteHeader(http.StatusOK)
 }
