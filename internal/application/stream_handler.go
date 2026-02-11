@@ -17,6 +17,6 @@ func NewStreamHandler(
 	}
 }
 
-func (h StreamHandler) Handle(ctx context.Context, prompt string) (string, error) {
-	return "", nil
+func (h StreamHandler) Handle(ctx context.Context, prompt string) (<-chan string, error) {
+	return h.llmClient.Stream(ctx, prompt)
 }
