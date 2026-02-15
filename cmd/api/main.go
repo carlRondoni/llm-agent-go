@@ -6,10 +6,7 @@ import (
 	"llm-agent-go/cmd/service_container"
 	"log"
 	"net/http"
-	"os"
-	"time"
 
-	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
@@ -21,30 +18,16 @@ import (
 func main() {
 	ctx := context.Background()
 
-	logger := initLogs()
-
+	container := service_container.NewServiceContainer()
 	shutdownTraces, err := initTraces(ctx, "llm-agent-go")
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to init traces")
+		container.Logger.Fatal().Err(err).Msg("failed to init traces")
 	}
 	defer shutdownTraces(ctx)
-
-	container := service_container.NewServiceContainer()
 
 	routes.InitRoutes(container.Controllers)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-func initLogs() zerolog.Logger {
-	zerolog.TimeFieldFormat = time.RFC3339Nano
-
-	logger := zerolog.New(os.Stdout).
-		With().
-		Timestamp().
-		Logger()
-
-	return logger
 }
 
 func initTraces(ctx context.Context, serviceName string) (func(context.Context) error, error) {

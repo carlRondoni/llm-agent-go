@@ -2,21 +2,22 @@ package service_container
 
 import (
 	"llm-agent-go/internal/infrastructure/llm_clients"
-	"log"
 	"os"
+
+	"github.com/rs/zerolog"
 )
 
 type LLMClients struct {
 	OllamaClient llm_clients.OllamaClient
 }
 
-func NewLLMClients() LLMClients {
+func NewLLMClients(logger zerolog.Logger) LLMClients {
 	url := os.Getenv("OLLAMA_URL")
 	if url == "" {
-		log.Fatal("OLLAMA_URL is empty")
+		logger.Fatal().Msg("OLLAMA_URL is not set")
 	}
 
 	return LLMClients{
-		OllamaClient: llm_clients.NewOllamaClient(url, "llama3"),
+		OllamaClient: llm_clients.NewOllamaClient(url, "llama3", logger),
 	}
 }

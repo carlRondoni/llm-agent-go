@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"github.com/sony/gobreaker/v2"
 	"go.opentelemetry.io/otel"
 	"golang.org/x/time/rate"
@@ -21,9 +21,10 @@ type OllamaClient struct {
 	http    *http.Client
 	breaker *gobreaker.CircuitBreaker[any]
 	limiter *rate.Limiter
+	logger  zerolog.Logger
 }
 
-func NewOllamaClient(baseURL string, model string) OllamaClient {
+func NewOllamaClient(baseURL string, model string, logger zerolog.Logger) OllamaClient {
 	cbst := gobreaker.Settings{
 		Name:        "LLM",
 		MaxRequests: 1,
@@ -44,11 +45,12 @@ func NewOllamaClient(baseURL string, model string) OllamaClient {
 		},
 		breaker: cb,
 		limiter: rate.NewLimiter(2, 5),
+		logger:  logger,
 	}
 }
 
 func (c OllamaClient) Generate(ctx context.Context, prompt string) (string, error) {
-	log.Info().Str("prompt", prompt).Msg("generate")
+	c.logger.Info().Str("prompt", prompt).Msg("generate")
 
 	if err := c.limiter.Wait(ctx); err != nil {
 		return "", err
@@ -71,7 +73,7 @@ func (c OllamaClient) Generate(ctx context.Context, prompt string) (string, erro
 
 		resp, err := c.http.Do(req)
 		if err != nil {
-			log.Error().
+			c.logger.Error().
 				Err(err).
 				Str("prompt", prompt).
 				Msg("failed to call LLM")
@@ -87,7 +89,7 @@ func (c OllamaClient) Generate(ctx context.Context, prompt string) (string, erro
 			Response string `json:"response"`
 		}
 		if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-			log.Error().
+			c.logger.Error().
 				Err(err).
 				Str("prompt", prompt).
 				Msg("failed to call LLM")
@@ -98,7 +100,7 @@ func (c OllamaClient) Generate(ctx context.Context, prompt string) (string, erro
 	})
 
 	if err != nil {
-		log.Error().
+		c.logger.Error().
 			Err(err).
 			Str("prompt", prompt).
 			Msg("failed to call LLM")
@@ -114,7 +116,7 @@ func (c OllamaClient) Generate(ctx context.Context, prompt string) (string, erro
 }
 
 func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string, error) {
-	log.Info().Str("prompt", prompt).Msg("stream")
+	c.logger.Info().Str("prompt", prompt).Msg("stream")
 
 	if err := c.limiter.Wait(ctx); err != nil {
 		return nil, err
@@ -140,7 +142,7 @@ func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string,
 
 		resp, err := c.http.Do(req)
 		if err != nil {
-			log.Error().
+			c.logger.Error().
 				Err(err).
 				Str("prompt", prompt).
 				Msg("failed to call LLM")
@@ -162,7 +164,7 @@ func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string,
 				}
 
 				if err := json.Unmarshal(scanner.Bytes(), &chunk); err != nil {
-					log.Error().
+					c.logger.Error().
 						Err(err).
 						Str("prompt", prompt).
 						Msg("failed to call LLM")
@@ -182,7 +184,7 @@ func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string,
 		return nil, nil
 	})
 	if err != nil {
-		log.Error().
+		c.logger.Error().
 			Err(err).
 			Str("prompt", prompt).
 			Msg("failed to call LLM")
@@ -194,7 +196,7 @@ func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string,
 }
 
 func (c OllamaClient) Health(ctx context.Context) error {
-	log.Info().Msg("health")
+	c.logger.Info().Msg("health")
 
 	if err := c.limiter.Wait(ctx); err != nil {
 		return err
@@ -212,7 +214,7 @@ func (c OllamaClient) Health(ctx context.Context) error {
 			nil,
 		)
 		if err != nil {
-			log.Error().
+			c.logger.Error().
 				Err(err).
 				Msg("failed to call LLM")
 			return nil, err
@@ -220,7 +222,7 @@ func (c OllamaClient) Health(ctx context.Context) error {
 
 		resp, err := c.http.Do(req)
 		if err != nil {
-			log.Error().
+			c.logger.Error().
 				Err(err).
 				Msg("failed to call LLM")
 			return nil, err

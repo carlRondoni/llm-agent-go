@@ -1,3 +1,4 @@
+// traces
 otelcol.receiver.otlp "default" {
   grpc {
     endpoint = "0.0.0.0:4317"
@@ -23,5 +24,31 @@ otelcol.exporter.otlp "tempo" {
     tls {
       insecure = true
     }
+  }
+}
+
+// logs
+logging {
+  level = "info"
+}
+
+discovery.docker "local" {
+  host = "unix:///var/run/docker.sock"
+}
+
+loki.source.docker "app_logs" {
+  host = "unix:///var/run/docker.sock"
+  targets = discovery.docker.local.targets
+
+  labels = {
+    app = "ai-backend-api",
+  }
+
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
   }
 }

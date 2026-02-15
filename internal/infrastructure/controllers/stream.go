@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"llm-agent-go/internal/application"
 	"net/http"
+
+	"github.com/rs/zerolog"
 )
 
 type StreamController struct {
 	handler application.StreamHandler
+	logger  zerolog.Logger
 }
 
 type StreamRequest struct {
@@ -16,14 +19,17 @@ type StreamRequest struct {
 
 func NewStreamController(
 	handler application.StreamHandler,
+	logger zerolog.Logger,
 ) StreamController {
 	return StreamController{
 		handler: handler,
+		logger:  logger,
 	}
 }
 
 func (c StreamController) Execute(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
+		c.logger.Error().Msg("stream error: method not allowed")
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
@@ -32,7 +38,8 @@ func (c StreamController) Execute(w http.ResponseWriter, r *http.Request) {
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		http.Error(w, "stream unsupported", 500)
+		c.logger.Error().Msg("stream error: flusher unsupported")
+		http.Error(w, "stream unsupported", http.StatusInternalServerError)
 		return
 	}
 
@@ -41,18 +48,21 @@ func (c StreamController) Execute(w http.ResponseWriter, r *http.Request) {
 
 	var req GenerateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		c.logger.Error().Err(err).Msg("stream error: invalid json body")
 		http.Error(w, "invalid json body", http.StatusBadRequest)
 		return
 	}
 
 	if req.Prompt == "" {
+		c.logger.Error().Msg("stream error: prompt required")
 		http.Error(w, "prompt required", http.StatusBadRequest)
 		return
 	}
 
 	stream, err := c.handler.Handle(ctx, req.Prompt)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		c.logger.Error().Err(err).Msg("stream error: error on handler: " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

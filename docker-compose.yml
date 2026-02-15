@@ -11,6 +11,8 @@ services:
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       LOG_LEVEL: info
       OLLAMA_URL: http://ollama:11434
+    logging:
+      driver: "json-file"
     depends_on:
       - ollama
       - tempo
@@ -33,16 +35,12 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - grafana-data:/var/lib/grafana
+      - grafana-storage:/var/lib/grafana
     networks:
       - observability
-
-  loki:
-    image: grafana/loki:latest
-    container_name: loki
-    command: -config.file=/etc/loki/local-config.yaml
-    networks:
-      - observability
+    depends_on:
+      - loki
+      - tempo
 
   tempo:
     image: grafana/tempo:latest
@@ -52,6 +50,19 @@ services:
       - ./tempo/tempo.yaml:/etc/tempo.yaml
     ports:
       - "4317:4317"
+      - "4318:4318"
+      - "3200:3200"
+    networks:
+      - observability
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
     networks:
       - observability
 
@@ -59,8 +70,8 @@ services:
     image: grafana/alloy:latest
     container_name: alloy
     volumes:
-      - ./alloy:/etc/alloy
-      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ./alloy-config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     command: run /etc/alloy/config.alloy
     depends_on:
       - loki
@@ -68,8 +79,9 @@ services:
       - observability
 
 volumes:
-  grafana-data:
+  grafana-storage:
   ollama-data:
+
 
 networks:
   observability:
