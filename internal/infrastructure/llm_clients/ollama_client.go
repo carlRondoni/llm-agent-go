@@ -41,7 +41,7 @@ func NewOllamaClient(baseURL string, model string, logger zerolog.Logger) Ollama
 		baseURL: baseURL,
 		model:   model,
 		http: &http.Client{
-			Timeout: 2 * time.Minute,
+			Timeout: 2 * time.Minute, // needed for first time doing requests to ollama
 		},
 		breaker: cb,
 		limiter: rate.NewLimiter(2, 5),
@@ -53,6 +53,7 @@ func (c OllamaClient) Generate(ctx context.Context, prompt string) (string, erro
 	c.logger.Info().Str("prompt", prompt).Msg("generate")
 
 	if err := c.limiter.Wait(ctx); err != nil {
+		c.logger.Error().Err(err).Msg("rate limit exceeded")
 		return "", err
 	}
 
@@ -68,7 +69,14 @@ func (c OllamaClient) Generate(ctx context.Context, prompt string) (string, erro
 
 		b, _ := json.Marshal(reqBody)
 
-		req, _ := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/generate", bytes.NewBuffer(b))
+		req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/generate", bytes.NewBuffer(b))
+		if err != nil {
+			c.logger.Error().
+				Err(err).
+				Str("prompt", prompt).
+				Msg("failed to request LLM")
+			return "", err
+		}
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := c.http.Do(req)
@@ -82,6 +90,11 @@ func (c OllamaClient) Generate(ctx context.Context, prompt string) (string, erro
 		defer resp.Body.Close()
 
 		if resp.StatusCode >= 400 {
+			c.logger.Error().
+				Err(err).
+				Str("prompt", prompt).
+				Int("status", resp.StatusCode).
+				Msg("failed on call LLM")
 			return "", fmt.Errorf("llm generate failed, status: %d", resp.StatusCode)
 		}
 
@@ -109,6 +122,9 @@ func (c OllamaClient) Generate(ctx context.Context, prompt string) (string, erro
 
 	response, ok := result.(string)
 	if !ok {
+		c.logger.Error().
+			Str("type", fmt.Sprintf("%T", result)).
+			Msg("wrong LLM response")
 		return "", fmt.Errorf("unexpected response type: %T", result)
 	}
 
@@ -119,6 +135,7 @@ func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string,
 	c.logger.Info().Str("prompt", prompt).Msg("stream")
 
 	if err := c.limiter.Wait(ctx); err != nil {
+		c.logger.Error().Err(err).Msg("rate limit exceeded")
 		return nil, err
 	}
 
@@ -137,7 +154,14 @@ func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string,
 
 		b, _ := json.Marshal(body)
 
-		req, _ := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/generate", bytes.NewReader(b))
+		req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/generate", bytes.NewReader(b))
+		if err != nil {
+			c.logger.Error().
+				Err(err).
+				Str("prompt", prompt).
+				Msg("failed on call LLM")
+			return nil, err
+		}
 		req.Header.Set("Content-Type", "application/json")
 
 		resp, err := c.http.Do(req)
@@ -199,6 +223,7 @@ func (c OllamaClient) Health(ctx context.Context) error {
 	c.logger.Info().Msg("health")
 
 	if err := c.limiter.Wait(ctx); err != nil {
+		c.logger.Error().Err(err).Msg("rate limit exceeded")
 		return err
 	}
 
@@ -216,7 +241,7 @@ func (c OllamaClient) Health(ctx context.Context) error {
 		if err != nil {
 			c.logger.Error().
 				Err(err).
-				Msg("failed to call LLM")
+				Msg("failed on request LLM")
 			return nil, err
 		}
 
@@ -230,6 +255,9 @@ func (c OllamaClient) Health(ctx context.Context) error {
 		defer resp.Body.Close()
 
 		if resp.StatusCode >= 500 {
+			c.logger.Error().
+				Int("status", resp.StatusCode).
+				Msg("llm unhealthy status")
 			return nil, fmt.Errorf("llm unhealthy status: %d", resp.StatusCode)
 		}
 
