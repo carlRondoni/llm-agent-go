@@ -7,8 +7,6 @@ services:
       - "8080:8080"
     environment:
       OTEL_SERVICE_NAME: ai-backend-api
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
-      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       LOG_LEVEL: info
       OLLAMA_URL: http://ollama:11434
     logging:
@@ -32,6 +30,10 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
     ports:
       - "3000:3000"
     volumes:
@@ -45,13 +47,20 @@ services:
   tempo:
     image: grafana/tempo:latest
     container_name: tempo
-    command: [ "-config.file=/etc/tempo.yaml" ]
+    command: [ "-config.file=/etc/tempo.yaml", "-target=all" ]
     volumes:
-      - ./tempo/tempo.yaml:/etc/tempo.yaml
+      - ./tempo-config.yaml:/etc/tempo.yaml
+      - tempo-storage:/var/tempo
     ports:
       - "4317:4317"
       - "4318:4318"
       - "3200:3200"
+      - "14268:14268"
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3200/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - observability
 
@@ -63,6 +72,11 @@ services:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
     ports:
       - "3100:3100"
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3100/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - observability
 
@@ -80,6 +94,7 @@ services:
 
 volumes:
   grafana-storage:
+  tempo-storage:
   ollama-data:
 
 

@@ -6,6 +6,7 @@ import (
 	"llm-agent-go/cmd/service_container"
 	"log"
 	"net/http"
+	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -19,31 +20,36 @@ func main() {
 	ctx := context.Background()
 
 	container := service_container.NewServiceContainer()
-	shutdownTraces, err := initTraces(ctx, "llm-agent-go")
+	traceProvider, err := initTraces(ctx, "llm-agent-go")
 	if err != nil {
 		container.Logger.Fatal().Err(err).Msg("failed to init traces")
 	}
-	defer shutdownTraces(ctx)
+	defer traceProvider.Shutdown(ctx)
 
 	routes.InitRoutes(container.Controllers)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func initTraces(ctx context.Context, serviceName string) (func(context.Context) error, error) {
+func initTraces(ctx context.Context, serviceName string) (*sdktrace.TracerProvider, error) {
 	exporter, err := otlptracegrpc.New(
 		ctx,
 		otlptracegrpc.WithEndpoint("alloy:4317"),
+		otlptracegrpc.WithTimeout(5*time.Second),
 		otlptracegrpc.WithInsecure(),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	r := resource.NewWithAttributes(
-		semconv.SchemaURL,
-		semconv.ServiceName(serviceName),
+	r, err := resource.New(ctx,
+		resource.WithAttributes(
+			semconv.ServiceName(serviceName),
+		),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
@@ -51,7 +57,13 @@ func initTraces(ctx context.Context, serviceName string) (func(context.Context) 
 	)
 
 	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(propagation.TraceContext{})
 
-	return tp.Shutdown, nil
+	otel.SetTextMapPropagator(
+		propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{},
+			propagation.Baggage{},
+		),
+	)
+
+	return tp, nil
 }

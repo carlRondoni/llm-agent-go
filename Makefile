@@ -7,4 +7,5 @@ local-docker-build-and-start:
 local-docker-stop:
 	docker compose down
 
-local-docker-restart: local-docker-start local-docker-stop
+local-docker-restart: local-docker-stop local-docker-start
+local-docker-restart-and-build: local-docker-stop local-docker-build-and-start

@@ -123,7 +123,7 @@ func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string,
 	}
 
 	tr := otel.Tracer("llm-api")
-	ctx, span := tr.Start(ctx, "Generate")
+	ctx, span := tr.Start(ctx, "Stream")
 	defer span.End()
 
 	out := make(chan string)
@@ -203,7 +203,7 @@ func (c OllamaClient) Health(ctx context.Context) error {
 	}
 
 	tr := otel.Tracer("llm-api")
-	ctx, span := tr.Start(ctx, "Generate")
+	ctx, span := tr.Start(ctx, "Health")
 	defer span.End()
 
 	_, err := c.breaker.Execute(func() (any, error) {

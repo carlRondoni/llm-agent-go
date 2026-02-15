@@ -18,5 +18,5 @@ func NewLLMHealthCheckHandler(
 }
 
 func (h LLMHealthCheckHandler) Handle(ctx context.Context) error {
-	return nil
+	return h.llmClient.Health(ctx)
 }

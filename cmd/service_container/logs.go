@@ -12,6 +12,7 @@ func InitLogs() zerolog.Logger {
 
 	logger := zerolog.New(os.Stdout).
 		With().
+		Str("service", "llm-agent-go").
 		Timestamp().
 		Logger()
 
