@@ -160,6 +160,7 @@ func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string,
 				Err(err).
 				Str("prompt", prompt).
 				Msg("failed on call LLM")
+			close(out)
 			return nil, err
 		}
 		req.Header.Set("Content-Type", "application/json")
@@ -170,10 +171,9 @@ func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string,
 				Err(err).
 				Str("prompt", prompt).
 				Msg("failed to call LLM")
+			close(out)
 			return nil, err
 		}
-
-		out := make(chan string)
 
 		go func() {
 			defer resp.Body.Close()
@@ -212,7 +212,6 @@ func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string,
 			Err(err).
 			Str("prompt", prompt).
 			Msg("failed to call LLM")
-		close(out)
 		return nil, err
 	}
 
