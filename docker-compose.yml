@@ -13,7 +13,6 @@ services:
       driver: "json-file"
     depends_on:
       - ollama
-      - tempo
     networks:
       - observability
 
@@ -42,7 +41,6 @@ services:
       - observability
     depends_on:
       - loki
-      - tempo
 
   loki:
     image: grafana/loki:latest
