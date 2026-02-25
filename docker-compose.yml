@@ -44,26 +44,6 @@ services:
       - loki
       - tempo
 
-  tempo:
-    image: grafana/tempo:latest
-    container_name: tempo
-    command: [ "-config.file=/etc/tempo.yaml", "-target=all" ]
-    volumes:
-      - ./tempo-config.yaml:/etc/tempo.yaml
-      - tempo-storage:/var/tempo
-    ports:
-      - "4317:4317"
-      - "4318:4318"
-      - "3200:3200"
-      - "14268:14268"
-    healthcheck:
-      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3200/ready" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - observability
-
   loki:
     image: grafana/loki:latest
     container_name: loki
