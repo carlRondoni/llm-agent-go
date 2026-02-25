@@ -119,6 +119,9 @@ Build and Start:
 ```
 make local-docker-build-and-start
 ```
+
+NOTE: for the first time after starting he ecosystem you will need to init the model into ollama container using this command: `docker exec -it ollama ollama pull llama3`
+
 Stop:
 ```
 make local-docker-stop
