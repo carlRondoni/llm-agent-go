@@ -54,6 +54,8 @@ Response:
 
 Returns streamed chunks as they are generated.
 
+NOTE: to test properly in local this endpoint you should do `curl -N http://127.0.0.1:8080/llm/stream -H "Content-Type: application/json" -d '{"prompt": "hello"}'` instead of using normal api clients (postman, bruno,...)
+
 ### LLM Health Check
 ```GET /health/llm```
 
