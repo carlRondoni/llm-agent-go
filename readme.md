@@ -160,6 +160,10 @@ This repository is meant to show capability in:
 - fault tolerance
 - observability design
 
+## CI
+
+Every time you create a PR or push into main, CI will build and test the project.
+
 ## License
 
 MIT
