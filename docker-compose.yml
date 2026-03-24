@@ -72,9 +72,7 @@ services:
 
 volumes:
   grafana-storage:
-  tempo-storage:
   ollama-data:
-
 
 networks:
   observability:
