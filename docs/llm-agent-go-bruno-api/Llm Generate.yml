@@ -1,0 +1,21 @@
+info:
+  name: Llm Generate
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: 127.0.0.1:8080/llm/generate
+  body:
+    type: json
+    data: |-
+      {
+        "prompt": "hello there"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

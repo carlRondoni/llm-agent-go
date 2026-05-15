@@ -1,0 +1,21 @@
+info:
+  name: Llm Stream
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: 127.0.0.1:8080/llm/stream
+  body:
+    type: json
+    data: |-
+      {
+        "prompt": "hello here"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
