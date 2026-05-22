@@ -122,8 +122,6 @@ Build and Start:
 make local-docker-build-and-start
 ```
 
-NOTE: for the first time after starting he ecosystem you will need to init the model into ollama container using this command: `docker exec -it ollama ollama pull llama3`
-
 Stop:
 ```
 make local-docker-stop
@@ -136,6 +134,27 @@ Rebuild + start:
 ```
 make local-docker-restart-and-build
 ```
+
+### After init first time
+
+After start the first time you need to pull the model you want to have on your docker container:
+
+```bash
+docker exec -ti ollama ollama pull llama3
+```
+
+After that request to the generate endpoint to warmup the model, so it is ready to serve requests. First time will be slowest request, but it will be faster on subsequent requests.
+
+Also remeber to connecto loki to grafana:
+
+- in your browser go to `http://127.0.0.1:3000`
+- on left sidebar navigate to connections
+- expand it and click on data sources
+- click on 'Add new data source'
+- search and select loki
+- add the url `http://loki:3100`
+- click on save & test
+- after that you can go into explorer and see your logs using filter `app=ai-backend-api`
 
 ## Services
 | Service | Port  | Purpose       |

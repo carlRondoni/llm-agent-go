@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: 127.0.01:8080/health
+  url: "{{host}}:8080/health"
   auth: inherit
 
 settings:

@@ -5,12 +5,12 @@ info:
 
 http:
   method: POST
-  url: 127.0.0.1:8080/llm/generate
+  url: "{{host}}:8080/llm/generate"
   body:
     type: json
     data: |-
       {
-        "prompt": "hello there"
+        "prompt": "hello there!"
       }
   auth: inherit
 

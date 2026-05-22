@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: 127.0.0.1:8080/llm/stream
+  url: "{{host}}:8080/llm/stream"
   body:
     type: json
     data: |-
