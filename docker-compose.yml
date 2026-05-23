@@ -5,10 +5,8 @@ services:
     container_name: ai-backend-api
     ports:
       - "8080:8080"
-    environment:
-      OTEL_SERVICE_NAME: ai-backend-api
-      LOG_LEVEL: info
-      OLLAMA_URL: http://ollama:11434
+    env_file:
+      - .env
     logging:
       driver: "json-file"
     depends_on:

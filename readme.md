@@ -113,25 +113,38 @@ Collected by:
 
 ## Running Locally
 
-Start stack:
+Init local:
+```bash
+make local-init
 ```
+
+First time init local:
+```bash
+make local-complete-first-start
+```
+
+Start stack:
+```bash
 make local-docker-start
 ```
+
 Build and Start:
-```
+```bash
 make local-docker-build-and-start
 ```
 
 Stop:
-```
+```bash
 make local-docker-stop
 ```
+
 Restart:
-```
+```bash
 make local-docker-restart
 ```
+
 Rebuild + start:
-```
+```bash
 make local-docker-restart-and-build
 ```
 
@@ -140,7 +153,7 @@ make local-docker-restart-and-build
 After start the first time you need to pull the model you want to have on your docker container:
 
 ```bash
-docker exec -ti ollama ollama pull llama3
+make local-docker-post-start
 ```
 
 After that request to the generate endpoint to warmup the model, so it is ready to serve requests. First time will be slowest request, but it will be faster on subsequent requests.
