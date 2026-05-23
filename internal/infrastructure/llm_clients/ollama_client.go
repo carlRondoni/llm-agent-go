@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -98,18 +99,32 @@ func (c OllamaClient) Generate(ctx context.Context, prompt string) (string, erro
 			return "", fmt.Errorf("llm generate failed, status: %d", resp.StatusCode)
 		}
 
-		var out struct {
-			Response string `json:"response"`
-		}
-		if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-			c.logger.Error().
-				Err(err).
-				Str("prompt", prompt).
-				Msg("failed to call LLM")
-			return nil, err
+		scanner := bufio.NewScanner(resp.Body)
+		var finalResp strings.Builder
+
+		for scanner.Scan() {
+			line := scanner.Text()
+			var chunk struct {
+				Response string `json:"response"`
+				Done     bool   `json:"done"`
+			}
+			if err := json.Unmarshal([]byte(line), &chunk); err != nil {
+				c.logger.Error().Err(err).Str("line", line).Msg("failed to parse LLM chunk")
+				continue
+			}
+
+			finalResp.WriteString(chunk.Response)
+			if chunk.Done {
+				break
+			}
 		}
 
-		return out.Response, nil
+		if err := scanner.Err(); err != nil {
+			c.logger.Error().Err(err).Msg("scanner error")
+			return "", err
+		}
+
+		return finalResp.String(), nil
 	})
 
 	if err != nil {
