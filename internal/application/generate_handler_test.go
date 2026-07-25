@@ -67,7 +67,7 @@ func TestGenerateHandler_ErrorPropagation(t *testing.T) {
 func TestGenerateHandler_ContextForwarded(t *testing.T) {
 	mock := mockLLMGenerateTest{
 		generateFn: func(ctx context.Context, prompt string) (string, error) {
-			assert.Equal(t, "value", ctx.Value("key"))
+			assert.Equal(t, "value", ctx.Value(constKey))
 			return "ok", nil
 		},
 	}
