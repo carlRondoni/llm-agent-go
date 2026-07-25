@@ -9,8 +9,10 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Necesario para auto-generar el badge
 
     steps:
       - name: Check out repository
@@ -25,8 +27,40 @@ jobs:
       - name: Install dependencies
         run: go mod download
 
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+
+      - name: Build
+        run: go build -v ./...
+
       - name: Run tests with coverage
         run: go test -v -coverprofile=coverage.out ./...
 
-      - name: Show coverage
+      - name: Show coverage summary
         run: go tool cover -func=coverage.out
+
+      # Este paso dibuja el badge de coverage y lo sube al repo si es un push a main
+      - name: Generate Coverage Badge
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: tj-actions/coverage-badge-go@v3
+        with:
+          filename: coverage.out
+          text: coverage
+
+      - name: Verify Changed files
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: tj-actions/verify-changed-files@v17
+        id: verify-changed-files
+        with:
+          files: README.md
+
+      - name: Commit changes
+        if: steps.verify-changed-files.outputs.files_changed == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add README.md
+          git commit -m "chore: Updated coverage badge."
+          git push

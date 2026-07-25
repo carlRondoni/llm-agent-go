@@ -4,6 +4,7 @@
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)
 ![Architecture](https://img.shields.io/badge/Architecture-Clean-brightgreen?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+<!-- coverage:start --><!-- coverage:end -->
 
 Production-style backend service that exposes an HTTP API to interact with an LLM engine through a resilient, observable, and testable architecture.
 
