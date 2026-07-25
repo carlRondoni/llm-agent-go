@@ -12,7 +12,7 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Necesario para auto-generar el badge
+      contents: write
 
     steps:
       - name: Check out repository
@@ -41,7 +41,6 @@ jobs:
       - name: Show coverage summary
         run: go tool cover -func=coverage.out
 
-      # Este paso dibuja el badge de coverage y lo sube al repo si es un push a main
       - name: Generate Coverage Badge
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: tj-actions/coverage-badge-go@v3

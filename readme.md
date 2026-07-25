@@ -11,6 +11,7 @@ Production-style backend service that exposes an HTTP API to interact with an LL
 This project is intentionally designed as an engineering showcase: it demonstrates capability in backend architecture, distributed system thinking, fault tolerance, and observability design expected in modern Go systems.
 
 ## Table of Contents
+
 - [Features](#features)
 - [Architecture Overview](#architecture-overview)
 - [Resilience Strategy](#resilience-strategy)
@@ -65,26 +66,35 @@ llm-agent-go/
 The LLM client is protected by three layers:
 
 ### Rate Limiter
+
 Prevents request bursts from overwhelming the model or infrastructure.
 
 ### Circuit Breaker
+
 Stops sending requests when failures exceed a threshold.
 
 State machine:
+
 ```
 Closed → Open → Half-Open → Closed
 ```
+
 Trip condition:
+
 ```
 > 3 consecutive failures
 ```
+
 Purpose:
+
 - protect upstream
 - avoid cascading failures
 - reduce resource waste
 
 ### Context Cancellation
+
 Every request respects context:
+
 - client disconnect → request stops
 - timeout → request stops
 - upstream cancelled → propagation stops
@@ -94,9 +104,11 @@ Every request respects context:
 The service emits telemetry from day one.
 
 ### Logs
+
 Structured logs (zerolog) written to stdout.
 
 Collected by:
+
 - Loki (log storage)
 - Alloy (collector)
 - Grafana (dashboards)
@@ -106,43 +118,52 @@ Collected by:
 ## Getting Started
 
 ### Prerequisites
+
 Before you begin, ensure you have the following installed:
+
 - [Docker & Docker Compose](https://docs.docker.com/get-docker/)
 - [Make](https://www.gnu.org/software/make/)
 
 ### Running Locally
 
 Init local (creates `.env`):
+
 ```bash
 make local-init
 ```
 
 First time init local (Starts docker and pulls the model):
+
 ```bash
 make local-complete-first-start
 ```
 
 Start stack:
+
 ```bash
 make local-docker-start
 ```
 
 Build and Start:
+
 ```bash
 make local-docker-build-and-start
 ```
 
 Stop:
+
 ```bash
 make local-docker-stop
 ```
 
 Restart:
+
 ```bash
 make local-docker-restart
 ```
 
 Rebuild + start:
+
 ```bash
 make local-docker-restart-and-build
 ```
@@ -158,6 +179,7 @@ make local-docker-post-start
 After that request to the generate endpoint to warmup the model, so it is ready to serve requests. First time will be slowest request, but it will be faster on subsequent requests.
 
 Also remember to connect loki to grafana:
+
 - in your browser go to `http://127.0.0.1:3000`
 - on left sidebar navigate to connections
 - expand it and click on data sources
@@ -170,9 +192,11 @@ Also remember to connect loki to grafana:
 ## API Endpoints
 
 ### Generate Text
+
 `POST /llm/generate`
 
 Body:
+
 ```json
 {
   "prompt": "Explain distributed systems"
@@ -180,6 +204,7 @@ Body:
 ```
 
 Response:
+
 ```json
 {
   "response": "..."
@@ -187,6 +212,7 @@ Response:
 ```
 
 ### Stream Text
+
 `POST /llm/stream`
 
 Returns streamed chunks as they are generated.
@@ -194,13 +220,16 @@ Returns streamed chunks as they are generated.
 NOTE: to test properly in local this endpoint you should do `curl -N http://127.0.0.1:8080/llm/stream -H "Content-Type: application/json" -d '{"prompt": "hello"}'` instead of using normal api clients (postman, bruno,...)
 
 ### LLM Health Check
+
 `GET /health/llm`
 
 Returns:
+
 - 200 → LLM reachable
 - 500 → LLM unavailable
 
 ### Health Check
+
 `GET /health`
 
 ## Testing
@@ -214,6 +243,7 @@ go test -v ./...
 ## Services & Environment
 
 ### Services
+
 | Service | Port  | Purpose       |
 | ------- | ----- | ------------- |
 | API     | 8080  | main service  |
@@ -222,13 +252,14 @@ go test -v ./...
 | Loki    | 3100  | logs          |
 
 ### Environment Variables
+
 | Variable   | Description  |
 | ---------- | ------------ |
 | OLLAMA_URL | LLM base URL |
 
 ## CI
 
-Every time you create a PR or push into main, CI will build and test the project.
+Every time you create a PR or push into main, CI will build, perform lint checks and test the project.
 
 ## License
 
