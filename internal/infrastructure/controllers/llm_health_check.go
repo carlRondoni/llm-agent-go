@@ -34,17 +34,23 @@ func (c LlmHealthCheckController) Execute(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		c.logger.Error().Err(err).Msg("llm health check error: llm down")
 		w.WriteHeader(http.StatusServiceUnavailable)
-		json.NewEncoder(w).Encode(map[string]any{
+		err = json.NewEncoder(w).Encode(map[string]any{
 			"status": "degraded",
 			"llm":    "down",
 		})
+		if err != nil {
+			c.logger.Error().Err(err).Msg("llm health check error: error on encoding response: " + err.Error())
+		}
 		return
 	}
 
 	c.logger.Info().Msg("llm health check OK")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]any{
+	err = json.NewEncoder(w).Encode(map[string]any{
 		"status": "ok",
 		"llm":    "up",
 	})
+	if err != nil {
+		c.logger.Error().Err(err).Msg("llm health check error: error on encoding response: " + err.Error())
+	}
 }

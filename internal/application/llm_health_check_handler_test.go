@@ -34,12 +34,12 @@ func TestLLMHealthCheckHandler_CallsClient(t *testing.T) {
 	mock := &mockLLMHealthCheck{}
 	h := application.NewLLMHealthCheckHandler(mock)
 
-	ctx := context.WithValue(context.Background(), "k", "v")
+	ctx := context.WithValue(context.Background(), constKey, "v")
 
 	err := h.Handle(ctx)
 	assert.NoError(t, err)
 	assert.True(t, mock.called)
-	assert.Equal(t, "v", mock.ctx.Value("k"))
+	assert.Equal(t, "v", mock.ctx.Value(constKey))
 }
 
 func TestLLMHealthCheckHandler_ReturnsError(t *testing.T) {

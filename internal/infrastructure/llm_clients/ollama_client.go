@@ -88,7 +88,12 @@ func (c OllamaClient) Generate(ctx context.Context, prompt string) (string, erro
 				Msg("failed to call LLM")
 			return "", err
 		}
-		defer resp.Body.Close()
+		defer func() {
+			err = resp.Body.Close()
+			if err != nil {
+				c.logger.Error().Err(err).Msg("failed to close response body")
+			}
+		}()
 
 		if resp.StatusCode >= 400 {
 			c.logger.Error().
@@ -191,7 +196,12 @@ func (c OllamaClient) Stream(ctx context.Context, prompt string) (<-chan string,
 		}
 
 		go func() {
-			defer resp.Body.Close()
+			defer func() {
+				err = resp.Body.Close()
+				if err != nil {
+					c.logger.Error().Err(err).Msg("failed to close response body")
+				}
+			}()
 			defer close(out)
 
 			scanner := bufio.NewScanner(resp.Body)
@@ -266,7 +276,12 @@ func (c OllamaClient) Health(ctx context.Context) error {
 				Msg("failed to call LLM")
 			return nil, err
 		}
-		defer resp.Body.Close()
+		defer func() {
+			err = resp.Body.Close()
+			if err != nil {
+				c.logger.Error().Err(err).Msg("failed to close response body")
+			}
+		}()
 
 		if resp.StatusCode >= 500 {
 			c.logger.Error().

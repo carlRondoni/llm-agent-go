@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
 )
 
 func newTestClient(serverURL string) llm_clients.OllamaClient {
@@ -21,7 +22,8 @@ func newTestClient(serverURL string) llm_clients.OllamaClient {
 func TestGenerate_Success(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, `{"response":"hello"}`)
+		_, err := fmt.Fprint(w, `{"response":"hello"}`)
+		assert.NoError(t, err)
 	}))
 	defer srv.Close()
 
@@ -60,7 +62,8 @@ func TestStream_Chunks(t *testing.T) {
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, strings.TrimSpace(body))
+		_, err := fmt.Fprint(w, strings.TrimSpace(body))
+		assert.NoError(t, err)
 	}))
 	defer srv.Close()
 

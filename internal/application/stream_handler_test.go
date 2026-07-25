@@ -39,12 +39,12 @@ func TestStreamHandler_CallsClient(t *testing.T) {
 
 	h := application.NewStreamHandler(mock)
 
-	ctx := context.WithValue(context.Background(), "k", "v")
+	ctx := context.WithValue(context.Background(), constKey, "v")
 	res, err := h.Handle(ctx, "hello")
 	assert.NoError(t, err)
 	assert.True(t, mock.called)
 	assert.Equal(t, "hello", mock.prompt)
-	assert.Equal(t, "v", mock.ctx.Value("k"))
+	assert.Equal(t, "v", mock.ctx.Value(constKey))
 	assert.Equal(t, res, (<-chan string)(out))
 }
 
