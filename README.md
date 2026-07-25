@@ -1,4 +1,5 @@
 # LLM Agent Go
+![coverage](https://img.shields.io/badge/coverage-1-red)
 
 ![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?style=for-the-badge&logo=go)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)
