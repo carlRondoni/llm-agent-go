@@ -75,13 +75,13 @@ Stops sending requests when failures exceed a threshold.
 
 State machine:
 
-```
+```bash
 Closed → Open → Half-Open → Closed
 ```
 
 Trip condition:
 
-```
+```bash
 > 3 consecutive failures
 ```
 
@@ -113,7 +113,9 @@ Collected by:
 - Alloy (collector)
 - Grafana (dashboards)
 
-*(Tip: Cuando tengas configurado Grafana con algo de tráfico, te sugiero reemplazar este texto con un screenshot de tus dashboards para un gran impacto visual)*
+
+![Grafana Explorer](./docs/grafana-explorer-logs.png "grafana explorer logs")
+
 
 ## Getting Started
 
