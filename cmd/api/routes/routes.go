@@ -6,11 +6,11 @@ import (
 )
 
 func InitRoutes(controllers service_container.Controllers) {
-	// health checks
+	// basic routes
 	http.Handle("/health", http.HandlerFunc(controllers.HealthCheckController.Execute))
-	http.Handle("/health/llm", http.HandlerFunc(controllers.LlmHealthCheckController.Execute))
 
-	// llm endpoints
+	// llm routes
 	http.Handle("/llm/generate", http.HandlerFunc(controllers.GenerateController.Execute))
 	http.Handle("/llm/stream", http.HandlerFunc(controllers.StreamController.Execute))
+	http.Handle("/llm/health", http.HandlerFunc(controllers.LlmHealthCheckController.Execute))
 }

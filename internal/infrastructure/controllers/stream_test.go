@@ -82,4 +82,6 @@ func TestStreamController_InternalError(t *testing.T) {
 	controller.Execute(w, req)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Result().StatusCode)
+	assert.Equal(t, "application/json", w.Result().Header.Get("Content-Type"))
+	assert.JSONEq(t, `{"error":"stream error"}`, w.Body.String())
 }

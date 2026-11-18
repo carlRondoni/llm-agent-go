@@ -22,12 +22,13 @@ func TestLLMHealthCheckController_Success(t *testing.T) {
 	handler := application.NewLLMHealthCheckHandler(mockClient)
 	controller := controllers.NewLlmHealthCheckController(handler, zerolog.Nop())
 
-	req := httptest.NewRequest(http.MethodGet, "/health/llm", nil)
+	req := httptest.NewRequest(http.MethodGet, "/llm/health", nil)
 	w := httptest.NewRecorder()
 
 	controller.Execute(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Result().StatusCode)
+	assert.JSONEq(t, `{"status":"ok","llm":"up"}`, w.Body.String())
 }
 
 func TestLLMHealthCheckController_Error(t *testing.T) {
@@ -39,17 +40,18 @@ func TestLLMHealthCheckController_Error(t *testing.T) {
 	handler := application.NewLLMHealthCheckHandler(mockClient)
 	controller := controllers.NewLlmHealthCheckController(handler, zerolog.Nop())
 
-	req := httptest.NewRequest(http.MethodGet, "/health/llm", nil)
+	req := httptest.NewRequest(http.MethodGet, "/llm/health", nil)
 	w := httptest.NewRecorder()
 
 	controller.Execute(w, req)
 
 	assert.Equal(t, http.StatusServiceUnavailable, w.Result().StatusCode)
+	assert.JSONEq(t, `{"status":"degraded","llm":"down"}`, w.Body.String())
 }
 
 func TestLLMHealthCheckController_MethodNotAllowed(t *testing.T) {
 	controller := controllers.NewLlmHealthCheckController(application.LLMHealthCheckHandler{}, zerolog.Nop())
-	req := httptest.NewRequest(http.MethodPost, "/health/llm", nil)
+	req := httptest.NewRequest(http.MethodPost, "/llm/health", nil)
 	w := httptest.NewRecorder()
 
 	controller.Execute(w, req)
