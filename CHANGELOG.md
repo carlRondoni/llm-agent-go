@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - A unit test proving that a client disconnecting from `POST /llm/stream` cancels the request to Ollama.
 - Makefile targets `help`, `test-unit`, `test-integration`, `test` and `test-coverage`, plus `docker-*` targets. The old `local-*` targets still work.
 - CI integration job with Ollama as a service container, using the small `qwen2.5:0.5b` model.
+- `LICENSE` file (MIT). The README already claimed this license.
 
 ### Changed
 
@@ -22,12 +23,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `make docker-pull-model` no longer uses `docker exec -ti`, so it also works without a terminal.
 - Docker Compose: the API waits until Ollama is healthy before starting, and gets `OLLAMA_URL` and `OLLAMA_MODEL` from `.env` or from defaults. `.env` is now optional.
 - `make docker-pull-model` and the integration tests use the same `OLLAMA_MODEL` as the API: environment first, then `.env`, then `llama3`.
+- README rewritten: API, errors and health tables, a streaming and cancellation section, the real rate limiter and circuit breaker settings, design decisions, and a mermaid architecture diagram.
 - The coverage badge is published by CI to a `badges` branch and read through a shields.io endpoint, instead of a percentage committed into the README.
 
 ### Removed
 
 - `LOG_LEVEL` and `OTEL_SERVICE_NAME` from `.env.example`. The code never read them.
 - The Loki healthcheck in Docker Compose. It always failed, because the image has no `wget`.
+- `docs/project.png`, replaced by the mermaid diagram in the README.
 
 ### Fixed
 
