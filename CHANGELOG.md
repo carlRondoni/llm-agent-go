@@ -4,7 +4,13 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-11-18
+
+First stable release. It aligns the project with its sibling [rag-service-go](https://github.com/carlRondoni/rag-service-go) in conventions, tests, CI and documentation. The project is now considered finished.
+
+The service exposes a local Ollama model through `POST /llm/generate` and `POST /llm/stream`, with a rate limiter, a circuit breaker, health endpoints and structured logs in Loki and Grafana.
+
+**Upgrading:** the Ollama health check moved to `GET /llm/health`. Update any probe or script that calls `GET /health/llm`.
 
 ### Added
 
@@ -36,3 +42,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Fixed
 
 - The README now gives the Loki query that works, `{service_name="ai-backend-api"}`, and no longer claims telemetry beyond logs.
+
+[1.0.0]: https://github.com/carlRondoni/llm-agent-go/releases/tag/v1.0.0
