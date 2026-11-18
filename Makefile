@@ -3,7 +3,13 @@
         docker-start docker-start-build docker-stop docker-restart docker-pull-model \
         test-unit test-integration test test-coverage
 
-OLLAMA_MODEL ?= llama3
+# same precedence as docker compose: environment, then .env, then llama3
+OLLAMA_MODEL ?= $(shell sed -n 's/^OLLAMA_MODEL=//p' .env 2>/dev/null | tr -d '\r"')
+ifeq ($(strip $(OLLAMA_MODEL)),)
+OLLAMA_MODEL := llama3
+endif
+# the integration tests read it too
+export OLLAMA_MODEL
 
 help:
 	@echo "Available commands:"
@@ -11,7 +17,7 @@ help:
 	@echo "  make docker-start                - Start Docker compose services in background"
 	@echo "  make docker-start-build          - Rebuild the API image and start Docker compose services"
 	@echo "  make docker-stop                 - Stop Docker compose services"
-	@echo "  make docker-pull-model           - Pull the model (OLLAMA_MODEL, default llama3) into the Ollama container"
+	@echo "  make docker-pull-model           - Pull OLLAMA_MODEL (environment, then .env, then llama3) into the Ollama container"
 	@echo "  make test-unit                   - Run unit tests (//go:build unit)"
 	@echo "  make test-integration            - Rebuild and start the stack, then run integration tests (//go:build integration)"
 	@echo "  make test                        - Run all tests (unit + integration)"

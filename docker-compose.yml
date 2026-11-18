@@ -5,12 +5,15 @@ services:
     container_name: ai-backend-api
     ports:
       - "8080:8080"
-    env_file:
-      - .env
+    # values come from .env when it exists, otherwise from these defaults
+    environment:
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3}
     logging:
       driver: "json-file"
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
     networks:
       - observability
 
@@ -21,6 +24,12 @@ services:
       - "11434:11434"
     volumes:
       - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
     networks:
       - observability
 
@@ -48,11 +57,7 @@ services:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
     ports:
       - "3100:3100"
-    healthcheck:
-      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3100/ready" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    # no healthcheck: the image has no shell or http client
     networks:
       - observability
 

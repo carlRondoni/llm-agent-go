@@ -102,7 +102,7 @@ Every request respects context:
 
 ## Observability
 
-The service emits telemetry from day one.
+The only telemetry is structured JSON logs. There are no metrics, and no traces are exported.
 
 ### Logs
 
@@ -190,7 +190,7 @@ Also remember to connect loki to grafana:
 - search and select loki
 - add the url `http://loki:3100`
 - click on save & test
-- after that you can go into explorer and see your logs using filter `app=ai-backend-api`
+- after that you can go into Explore and see your logs with the query `{service_name="ai-backend-api"}`
 
 ## API Endpoints
 

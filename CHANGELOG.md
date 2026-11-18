@@ -20,8 +20,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `POST /llm/stream` now answers failures that happen before the stream starts with `500` and a JSON body `{"error":"..."}`, the same as `POST /llm/generate`. It used to return plain text.
 - `make local-init` (and so `make local-complete-first-start`) no longer overwrites an existing `.env`.
 - `make docker-pull-model` no longer uses `docker exec -ti`, so it also works without a terminal.
+- Docker Compose: the API waits until Ollama is healthy before starting, and gets `OLLAMA_URL` and `OLLAMA_MODEL` from `.env` or from defaults. `.env` is now optional.
+- `make docker-pull-model` and the integration tests use the same `OLLAMA_MODEL` as the API: environment first, then `.env`, then `llama3`.
 - The coverage badge is published by CI to a `badges` branch and read through a shields.io endpoint, instead of a percentage committed into the README.
 
 ### Removed
 
 - `LOG_LEVEL` and `OTEL_SERVICE_NAME` from `.env.example`. The code never read them.
+- The Loki healthcheck in Docker Compose. It always failed, because the image has no `wget`.
+
+### Fixed
+
+- The README now gives the Loki query that works, `{service_name="ai-backend-api"}`, and no longer claims telemetry beyond logs.
