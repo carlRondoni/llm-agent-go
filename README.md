@@ -105,7 +105,12 @@ When a client disconnects in the middle of a stream, the request to Ollama is ca
 3. `Stream` builds the Ollama request with `http.NewRequestWithContext`, so the HTTP transport aborts it.
 4. Reading the response fails, the reading goroutine closes the channel, and the controller returns.
 
-`TestStreamController_ClientDisconnectCancelsUpstream` proves this with the real controller, handler and client against a fake Ollama: the client reads the first chunk, disconnects, and the test checks that the request to Ollama is cancelled. `/llm/generate` passes its context down the same way.
+Two tests prove this. In both, the client reads the first chunk, disconnects, and the test checks that the request to Ollama is cancelled:
+
+- `TestStreamController_ClientDisconnectCancelsUpstream`, a unit test, uses the real controller, handler and client against a fake Ollama.
+- `TestAPI_StreamDisconnect_CancelsOllamaRequest_Integration` does the same against the real Ollama. A pass-through proxy between the client and Ollama shows that Ollama's response is cut off rather than read to the end. The test then checks that the service still answers.
+
+`/llm/generate` passes its context down the same way.
 
 ### Limitations
 
@@ -217,6 +222,15 @@ The port (`8080`), the rate limit, the circuit breaker settings and the 2-minute
 | `make test-coverage` | Unit tests with a coverage summary | Go |
 
 `make test-integration` and `make test` rebuild and start the Docker stack and pull the model first, so they always test the current code. They use the same `OLLAMA_MODEL` as the API.
+
+Unit tests use hand-written mocks and fake Ollama servers to reach failures that a real Ollama doesn't produce on demand. The integration tests use no mocks:
+
+- the API happy paths for health, generate and stream;
+- validation errors: `400`, `405`, and `404` on the old `/health/llm`;
+- a model Ollama doesn't have: `500` from generate, and the empty `200` from stream described in [Limitations](#limitations);
+- cancellation of the request to Ollama when a stream client disconnects.
+
+The last two run the real controllers, handlers and Ollama client in the test process, so they can choose the model and watch the requests to Ollama.
 
 Tests are separated with the `unit` and `integration` Go build tags. A plain `go test ./...` runs the unit tests. GitHub Actions runs linting, the build, and unit tests, then the integration tests with Ollama as a service container and the small `qwen2.5:0.5b` model. The integration tests only check that text comes back, not what it says, so any model works.
 

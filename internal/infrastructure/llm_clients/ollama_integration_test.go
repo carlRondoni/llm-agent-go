@@ -58,3 +58,25 @@ func TestOllamaClient_Integration(t *testing.T) {
 	assert.Positive(t, chunks)
 	assert.NotEmpty(t, strings.TrimSpace(text.String()))
 }
+
+// Ollama answers 404 for a model it doesn't have
+func TestOllamaClient_UnknownModel_Integration(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	client := llm_clients.NewOllamaClient(getOllamaURL(), "llm-agent-go-missing-model", zerolog.Nop())
+
+	_, err := client.Generate(ctx, "hi")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "status: 404")
+
+	// documented limitation: Stream doesn't check the status, so the channel just closes empty
+	stream, err := client.Stream(ctx, "hi")
+	require.NoError(t, err)
+
+	var chunks int
+	for range stream {
+		chunks++
+	}
+	assert.Zero(t, chunks)
+}

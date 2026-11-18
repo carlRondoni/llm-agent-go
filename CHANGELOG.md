@@ -10,7 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Optional `OLLAMA_MODEL` environment variable to choose the Ollama model. It defaults to `llama3`, the previous hard-coded value.
 - Integration tests against a real Ollama, behind the `integration` build tag: an Ollama client test and an end-to-end API test in `tests/integration`. Unit tests use the `unit` build tag.
-- A unit test proving that a client disconnecting from `POST /llm/stream` cancels the request to Ollama.
+- Tests proving that a client disconnecting from `POST /llm/stream` cancels the request to Ollama: a unit test against a fake Ollama, and an integration test against the real one.
+- Integration tests without mocks for validation errors (`400`, `405`, `404`) and for a model Ollama doesn't have.
 - Makefile targets `help`, `test-unit`, `test-integration`, `test` and `test-coverage`, plus `docker-*` targets. The old `local-*` targets still work.
 - CI integration job with Ollama as a service container, using the small `qwen2.5:0.5b` model.
 - `LICENSE` file (MIT). The README already claimed this license.

@@ -103,3 +103,46 @@ func TestAPI_E2E_Integration(t *testing.T) {
 		assert.NotEmpty(t, strings.TrimSpace(string(body)))
 	})
 }
+
+// validation runs before any call to Ollama, so these answers are deterministic
+func TestAPI_Errors_Integration(t *testing.T) {
+	baseURL := getAPIBaseURL(t)
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	tests := []struct {
+		name   string
+		method string
+		path   string
+		body   string
+		status int
+		text   string
+	}{
+		{"generate with invalid json", http.MethodPost, "/llm/generate", `{bad`, http.StatusBadRequest, "invalid json body"},
+		{"generate with empty prompt", http.MethodPost, "/llm/generate", `{"prompt":""}`, http.StatusBadRequest, "prompt required"},
+		{"stream with invalid json", http.MethodPost, "/llm/stream", `{bad`, http.StatusBadRequest, "invalid json body"},
+		{"stream without prompt", http.MethodPost, "/llm/stream", `{}`, http.StatusBadRequest, "prompt required"},
+		{"GET /llm/generate", http.MethodGet, "/llm/generate", "", http.StatusMethodNotAllowed, "method not allowed"},
+		{"GET /llm/stream", http.MethodGet, "/llm/stream", "", http.StatusMethodNotAllowed, "method not allowed"},
+		{"POST /llm/health", http.MethodPost, "/llm/health", "", http.StatusMethodNotAllowed, "method not allowed"},
+		{"POST /health", http.MethodPost, "/health", "", http.StatusMethodNotAllowed, "method not allowed"},
+		{"old /health/llm route", http.MethodGet, "/health/llm", "", http.StatusNotFound, "not found"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req, err := http.NewRequestWithContext(context.Background(), tt.method, baseURL+tt.path, strings.NewReader(tt.body))
+			require.NoError(t, err)
+			req.Header.Set("Content-Type", "application/json")
+
+			resp, err := client.Do(req)
+			require.NoError(t, err)
+			defer func() { assert.NoError(t, resp.Body.Close()) }()
+
+			assert.Equal(t, tt.status, resp.StatusCode)
+
+			body, err := io.ReadAll(resp.Body)
+			require.NoError(t, err)
+			assert.Contains(t, string(body), tt.text)
+		})
+	}
+}
