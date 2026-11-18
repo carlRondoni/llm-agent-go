@@ -1,11 +1,11 @@
 # LLM Agent Go
-![coverage](https://img.shields.io/badge/coverage-75.2%25-brightgreen)
+
+[![Coverage](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FcarlRondoni%2Fllm-agent-go%2Fbadges%2Fcoverage.json)](https://github.com/carlRondoni/llm-agent-go/actions/workflows/go.yml)
 
 ![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?style=for-the-badge&logo=go)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)
 ![Architecture](https://img.shields.io/badge/Architecture-Clean-brightgreen?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
-<!-- coverage:start --><!-- coverage:end -->
 
 Production-style backend service that exposes an HTTP API to interact with an LLM engine through a resilient, observable, and testable architecture.
 
