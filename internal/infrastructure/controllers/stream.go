@@ -39,14 +39,11 @@ func (c StreamController) Execute(w http.ResponseWriter, r *http.Request) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		c.logger.Error().Msg("stream error: flusher unsupported")
-		http.Error(w, "stream unsupported", http.StatusInternalServerError)
+		c.writeError(w, "stream unsupported")
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Transfer-Encoding", "chunked")
-
-	var req GenerateRequest
+	var req StreamRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		c.logger.Error().Err(err).Msg("stream error: invalid json body")
 		http.Error(w, "invalid json body", http.StatusBadRequest)
@@ -62,12 +59,26 @@ func (c StreamController) Execute(w http.ResponseWriter, r *http.Request) {
 	stream, err := c.handler.Handle(ctx, req.Prompt)
 	if err != nil {
 		c.logger.Error().Err(err).Msg("stream error: error on handler: " + err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.writeError(w, err.Error())
 		return
 	}
+
+	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Transfer-Encoding", "chunked")
 
 	for token := range stream {
 		_, _ = w.Write([]byte(token))
 		flusher.Flush()
+	}
+}
+
+func (c StreamController) writeError(w http.ResponseWriter, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusInternalServerError)
+	err := json.NewEncoder(w).Encode(map[string]string{
+		"error": message,
+	})
+	if err != nil {
+		c.logger.Error().Err(err).Msg("stream error: error on encoding response: " + err.Error())
 	}
 }

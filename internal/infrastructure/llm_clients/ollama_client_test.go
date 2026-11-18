@@ -1,3 +1,5 @@
+//go:build unit || !integration
+
 package llm_clients_test
 
 import (
